@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Todo List App</title>
+  <style>
+  
+    * {
+      box-sizing: border-box;
+    }
+
+    ul {
+      margin: 0;
+      padding: 0;
+    }
+
+    ul li {
+      cursor: pointer;
+      position: relative;
+      padding: 12px 8px 12px 40px;
+      background: #6D8B74;
+      font-size: 18px;
+
+    }
+
+    ul li:hover {
+      background: #D0C9C0;
+    }
+
+    ul li.checked {
+      background: #5F7161;
+      color: #D0C9C0;
+      text-decoration: line-through;
+    }
+
+    ul li.checked::before {
+      content: '';
+      position: absolute;
+      border-color: #EFEAD8;
+      border-style: solid;
+      border-width: 0 2px 2px 0;
+      top: 10px;
+      left: 16px;
+      transform: rotate(45deg);
+      height: 15px;
+      width: 7px;
+    }
+
+   
+    .close {
+      position: absolute;
+      right: 0;
+      top: 0;
+      padding: 12px 16px 12px 16px;
+    }
+
+    .close:hover {
+      background-color: #f44336;
+      color: white;
+    }
+
+   
+    .header {
+      background-color: #5F7161;
+      padding: 30px 40px;
+      color: #EFEAD8;
+      text-align: center;
+    }
+
+  
+    .header:after {
+      content: "";
+      display: table;
+      clear: both;
+    }
+
+    .btn {
+      border-radius: 2rem;
+      padding-left: 2%;
+      padding-right: 2%;
+    }
+    .btn:hover {
+      background-color: #D0C9C0;
+    }
+   
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <div class="header">
+    <h2>Todo List App</h2>
+    <input type="text" id="usernameInput" placeholder="Username">
+    <button class="btn" onclick="login()">Login</button>
+  </div>
+
+  <div id="todoListSection" style="display: none;">
+    <h2>Welcome, <span id="loggedInUser"></span>!</h2>
+
+    <h3>Add a new task:</h3>
+    <input type="text" id="taskInput" placeholder="Enter a new task here">
+    <button class="btn" onclick="addTask()">Add Task</button>
+
+    <h3>Your Tasks:</h3>
+    <ul id="taskList"></ul>
+  </div>
+
+
+  <script>
+let users = JSON.parse(localStorage.getItem("users")) || [];
+function login() {
+  const usernameInput = document.getElementById("usernameInput");
+  const username = usernameInput.value.trim();
+  if (username === "") {
+    alert("Please enter a username to continue");
+    return;
+  }
+  let user = users.find((user) => user.username === username);
+  if (!user) {
+    user = {
+      username: username,
+      tasks: [],
+    };
+    users.push(user);
+  }
+  localStorage.setItem("users", JSON.stringify(users));
+  document.getElementById("loggedInUser").textContent = user.username;
+  document.getElementById("usernameInput").value = "";
+  document.getElementById("todoListSection").style.display = "block";
+  populateTaskList(user);
+}
+
+function populateTaskList(user) {
+  const taskList = document.getElementById("taskList");
+  taskList.innerHTML = "";
+  user.tasks.forEach((task) => {
+    const li = document.createElement("li");
+    li.textContent = task.title;
+    if (task.completed) {
+      li.className = "checked";
+    }
+    const closeBtn = document.createElement("span");
+    closeBtn.className = "close";
+    closeBtn.textContent = "x";
+    closeBtn.addEventListener("click", function () {
+      removeTask(user, task);
+    });
+    li.addEventListener("click", function () {
+      toggleTaskCompletion(task);
+    });
+    li.appendChild(closeBtn);
+    taskList.appendChild(li);
+  });
+}
+
+
+function addTask() {
+  const taskInput = document.getElementById("taskInput");
+  const title = taskInput.value.trim();
+  if (title === "") {
+    alert("You must write something");
+    return;
+  }
+
+  const currentUser = getCurrentUser();
+  const task = {
+    title: title,
+    completed: false,
+  };
+
+  currentUser.tasks.push(task);
+  localStorage.setItem("users", JSON.stringify(users));
+  taskInput.value = "";
+  populateTaskList(currentUser);
+}
+
+
+function removeTask(user, task) {
+  const index = user.tasks.indexOf(task);
+  if (index > -1) {
+    user.tasks.splice(index, 1);
+    localStorage.setItem("users", JSON.stringify(users));
+    populateTaskList(user);
+  }
+}
+
+
+function toggleTaskCompletion(task) {
+  task.completed = !task.completed;
+  localStorage.setItem("users", JSON.stringify(users));
+  const currentUser = getCurrentUser();
+  populateTaskList(currentUser);
+}
+
+
+function getCurrentUser() {
+  const loggedInUsername = document.getElementById("loggedInUser").textContent;
+  return users.find((user) => user.username === loggedInUsername);
+}
+</script>
+</body>
+</html>
